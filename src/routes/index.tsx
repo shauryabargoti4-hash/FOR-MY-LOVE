@@ -29,6 +29,7 @@ import RoyalInvitation from "@/components/RoyalInvitation";
 import RegencyCandle from "@/components/RegencyCandle";
 import CinematicEnding from "@/components/CinematicEnding";
 import AntiquePocketWatch from "@/components/AntiquePocketWatch";
+import RegencyChandelier from "@/components/RegencyChandelier";
 import heroArya from "@/assets/hero-arya.jpg";
 import memory1 from "@/assets/memory-1.jpg";
 import memory2 from "@/assets/memory-2.jpg";
@@ -282,6 +283,9 @@ function Index() {
           fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/70 to-background" />
+
+        {/* ── Regency Chandelier (music-reactive sparkles & sway) ── */}
+        <RegencyChandelier />
 
         <div className="relative z-10 mx-auto max-w-3xl">
           {/* Candles flanking the hero heading */}

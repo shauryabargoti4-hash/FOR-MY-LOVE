@@ -15,6 +15,7 @@ import ScrollRoseVines from "@/components/ScrollRoseVines";
 import ButterflyLayer from "@/components/ButterflyLayer";
 import CursorSparkles from "@/components/CursorSparkles";
 import MusicBox from "@/components/MusicBox";
+import AmbientDustLayer from "@/components/AmbientDustLayer";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -139,6 +140,7 @@ function RootComponent() {
       <ButterflyLayer />
       <CursorSparkles />
       <MusicBox />
+      <AmbientDustLayer />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

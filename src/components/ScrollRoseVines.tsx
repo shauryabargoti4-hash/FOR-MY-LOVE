@@ -2,31 +2,24 @@
  * ScrollRoseVines
  *
  * Decorative rose vine SVGs fixed to the left and right edges of the page.
- * Scroll-driven animation using plain React + CSS:
- *   – vine stem grows via stroke-dashoffset
- *   – leaves unfold in opacity bands
- *   – roses bloom from bud → blush → deep rose via CSS color interpolation
- *
- * No external animation library required.
+ * Scroll-driven growth synced with music-reactive breathing.
+ * Triggers drifting petals to fall from the bloomed roses during orchestral peaks.
  */
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Linear interpolation between two numbers */
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * Math.max(0, Math.min(1, t));
 }
 
-/** Map a scroll value [0,1] through a band [start,end] → [0,1] */
 function band(scroll: number, start: number, end: number): number {
   if (scroll <= start) return 0;
   if (scroll >= end) return 1;
   return (scroll - start) / (end - start);
 }
 
-/** Interpolate between two hex colors at ratio t [0,1] */
 function lerpColor(a: string, b: string, t: number): string {
   const ah = parseInt(a.slice(1), 16);
   const bh = parseInt(b.slice(1), 16);
@@ -38,40 +31,49 @@ function lerpColor(a: string, b: string, t: number): string {
   return `rgb(${rr},${rg},${rb})`;
 }
 
-/** Three-stop color interpolation: green → blush → deep rose */
 function petalColor(scroll: number, start: number): string {
-  const t1 = band(scroll, start, start + 0.35);       // green → blush
-  const t2 = band(scroll, start + 0.35, start + 0.75); // blush → deep rose
+  const t1 = band(scroll, start, start + 0.35);       
+  const t2 = band(scroll, start + 0.35, start + 0.75); 
   if (t2 > 0) return lerpColor("#e8a8b8", "#8b2252", t2);
   return lerpColor("#4a7c4e", "#e8a8b8", t1);
 }
 
-// SVG total path length for the main stem (approximate)
 const STEM_LENGTH = 1080;
 
-// ─── SVG Vine (shared for left, mirrored via scaleX for right) ───────────────
+// ─── Falling Petal Interface ──────────────────────────────────────────────────
+
+interface FallingPetal {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  speedX: number;
+  speedY: number;
+  swayTime: number;
+  angle: number;
+  rotSpeed: number;
+  opacity: number;
+}
+
+// ─── Vine SVG component ───────────────────────────────────────────────────────
 
 interface VineProps {
   scroll: number;
 }
 
 function VineSvg({ scroll }: VineProps) {
-  // Vine growth: stem draws from 0→STEM_LENGTH as scroll goes 0→0.88
   const drawn = lerp(0, STEM_LENGTH, band(scroll, 0, 0.88));
   const dashOffset = STEM_LENGTH - drawn;
 
-  // Branch drawing (all branches share same progress, slightly delayed)
   const branchDrawn = lerp(0, 300, band(scroll, 0.04, 0.88));
   const branchOffset = 300 - branchDrawn;
 
-  // Leaf opacities — 5 bands
   const lA = band(scroll, 0.04, 0.20) * 0.82;
   const lB = band(scroll, 0.20, 0.38) * 0.82;
   const lC = band(scroll, 0.38, 0.56) * 0.82;
   const lD = band(scroll, 0.56, 0.74) * 0.82;
   const lE = band(scroll, 0.74, 0.90) * 0.82;
 
-  // Rose bloom scales & colors (each blooms in its own scroll band)
   const r1Scale   = lerp(0, 1, band(scroll, 0.08, 0.26));
   const r1Opacity = band(scroll, 0.08, 0.20);
   const r1Color   = petalColor(scroll, 0.08);
@@ -97,154 +99,93 @@ function VineSvg({ scroll }: VineProps) {
       aria-hidden="true"
       style={{ width: "100%", height: "100%", overflow: "visible" }}
     >
-      {/* ── Main Winding Stem ──────────────────────────────────────────── */}
+      {/* Main Stem */}
       <path
-        d="M 68 -20
-           C 44 90 98 185 62 305
-           C 32 405 94 488 56 608
-           C 24 705 90 788 60 908
-           C 37 972 70 1000 68 1022"
+        d="M20,0 C30,120 10,240 40,360 C60,480 30,600 50,720 C70,840 40,960 30,1000"
         stroke={vine}
-        strokeWidth="2.4"
+        strokeWidth="3.2"
         strokeLinecap="round"
         fill="none"
-        pathLength={STEM_LENGTH}
         strokeDasharray={STEM_LENGTH}
         strokeDashoffset={dashOffset}
-        style={{ transition: "stroke-dashoffset 0.08s linear" }}
       />
 
-      {/* ── Branches ──────────────────────────────────────────────────── */}
-      {/* Branch 1 — y≈265, toward left */}
-      <path
-        d="M 64 265 C 48 255 30 246 13 240"
-        stroke={vine} strokeWidth="1.7" fill="none" strokeLinecap="round"
-        pathLength={300} strokeDasharray={300} strokeDashoffset={branchOffset}
-        style={{ transition: "stroke-dashoffset 0.08s linear" }}
-      />
-      {/* Branch 2 — y≈490, toward right */}
-      <path
-        d="M 60 490 C 80 478 102 470 118 465"
-        stroke={vine} strokeWidth="1.7" fill="none" strokeLinecap="round"
-        pathLength={300} strokeDasharray={300} strokeDashoffset={branchOffset}
-        style={{ transition: "stroke-dashoffset 0.08s linear" }}
-      />
-      {/* Branch 3 — y≈662, toward left */}
-      <path
-        d="M 58 662 C 42 650 24 642 9 636"
-        stroke={vine} strokeWidth="1.7" fill="none" strokeLinecap="round"
-        pathLength={300} strokeDasharray={300} strokeDashoffset={branchOffset}
-        style={{ transition: "stroke-dashoffset 0.08s linear" }}
-      />
-      {/* Branch 4 — y≈880, toward right */}
-      <path
-        d="M 62 880 C 82 868 105 860 120 856"
-        stroke={vine} strokeWidth="1.7" fill="none" strokeLinecap="round"
-        pathLength={300} strokeDasharray={300} strokeDashoffset={branchOffset}
-        style={{ transition: "stroke-dashoffset 0.08s linear" }}
-      />
-
-      {/* ── Leaves ────────────────────────────────────────────────────── */}
-      {/* Pair A */}
-      <path d="M66 148 C56 134 48 139 54 148 C48 157 56 162 66 148 Z"
-        fill={vine} opacity={lA} transform="rotate(-38 66 148)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      <path d="M60 208 C70 194 78 199 72 208 C78 217 70 222 60 208 Z"
-        fill={vine} opacity={lA} transform="rotate(22 60 208)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      {/* Pair B */}
-      <path d="M64 372 C54 358 46 363 52 372 C46 381 54 386 64 372 Z"
-        fill={vine} opacity={lB} transform="rotate(-28 64 372)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      <path d="M57 432 C67 418 75 423 69 432 C75 441 67 446 57 432 Z"
-        fill={vine} opacity={lB} transform="rotate(33 57 432)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      {/* Pair C */}
-      <path d="M61 542 C51 528 43 533 49 542 C43 551 51 556 61 542 Z"
-        fill={vine} opacity={lC} transform="rotate(-24 61 542)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      <path d="M58 595 C68 581 76 586 70 595 C76 604 68 609 58 595 Z"
-        fill={vine} opacity={lC} transform="rotate(30 58 595)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      {/* Pair D */}
-      <path d="M62 758 C52 744 44 749 50 758 C44 767 52 772 62 758 Z"
-        fill={vine} opacity={lD} transform="rotate(-30 62 758)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      <path d="M59 818 C69 804 77 809 71 818 C77 827 69 832 59 818 Z"
-        fill={vine} opacity={lD} transform="rotate(26 59 818)"
-        style={{ transition: "opacity 0.3s ease" }} />
-      {/* Pair E */}
-      <path d="M64 952 C54 938 46 943 52 952 C46 961 54 966 64 952 Z"
-        fill={vine} opacity={lE} transform="rotate(-22 64 952)"
-        style={{ transition: "opacity 0.3s ease" }} />
-
-      {/* ── Roses ─────────────────────────────────────────────────────── */}
-      {/* Rose 1 — tip of Branch 1 (cx=11, cy=234) */}
-      <g
-        transform={`translate(11, 234) scale(${r1Scale})`}
-        style={{ transformOrigin: "11px 234px", opacity: r1Opacity, transition: "opacity 0.2s ease" }}
-      >
-        <Rose color={r1Color} />
+      {/* Symmetrical leaves and branch details */}
+      <g stroke={vine} strokeWidth="1.6" fill="none">
+        <path d="M30,120 Q55,140 70,130" strokeDasharray="300" strokeDashoffset={branchOffset} />
+        <path d="M22,240 Q4,260 -10,250" strokeDasharray="300" strokeDashoffset={branchOffset} />
+        <path d="M40,480 Q70,490 85,475" strokeDasharray="300" strokeDashoffset={branchOffset} />
+        <path d="M45,680 Q20,700 0,690" strokeDasharray="300" strokeDashoffset={branchOffset} />
+        <path d="M48,820 Q75,840 90,830" strokeDasharray="300" strokeDashoffset={branchOffset} />
       </g>
 
-      {/* Rose 2 — tip of Branch 2 (cx=120, cy=459) */}
-      <g
-        transform={`translate(120, 459) scale(${r2Scale})`}
-        style={{ transformOrigin: "120px 459px", opacity: r2Opacity, transition: "opacity 0.2s ease" }}
-      >
-        <Rose color={r2Color} />
+      {/* Leaves Group A */}
+      <g opacity={lA}>
+        <path d="M22,50 C32,45 35,32 25,28 C15,32 18,45 22,50 Z" fill={vine} />
+        <path d="M25,80 C36,75 42,65 32,60 C22,65 20,75 25,80 Z" fill={vine} />
       </g>
 
-      {/* Rose 3 — tip of Branch 3 (cx=7, cy=630) */}
-      <g
-        transform={`translate(7, 630) scale(${r3Scale})`}
-        style={{ transformOrigin: "7px 630px", opacity: r3Opacity, transition: "opacity 0.2s ease" }}
-      >
-        <Rose color={r3Color} />
+      {/* Leaves Group B */}
+      <g opacity={lB}>
+        <path d="M28,180 C18,185 12,198 20,202 C28,198 32,185 28,180 Z" fill={vine} />
+        <path d="M60,132 C68,124 64,112 55,115 C48,122 52,130 60,132 Z" fill={vine} />
       </g>
 
-      {/* Rose 4 — tip of Branch 4 (cx=122, cy=850) */}
-      <g
-        transform={`translate(122, 850) scale(${r4Scale})`}
-        style={{ transformOrigin: "122px 850px", opacity: r4Opacity, transition: "opacity 0.2s ease" }}
-      >
-        <Rose color={r4Color} />
+      {/* Leaves Group C */}
+      <g opacity={lC}>
+        <path d="M42,380 C52,375 55,362 45,358 C35,362 38,375 42,380 Z" fill={vine} />
+        <path d="M72,482 C80,474 76,462 67,465 C60,472 64,480 72,482 Z" fill={vine} />
       </g>
+
+      {/* Leaves Group D */}
+      <g opacity={lD}>
+        <path d="M48,580 C38,585 32,598 40,602 C48,598 52,585 48,580 Z" fill={vine} />
+        <path d="M20,688 C28,680 24,668 15,671 C8,678 12,686 20,688 Z" fill={vine} />
+      </g>
+
+      {/* Leaves Group E */}
+      <g opacity={lE}>
+        <path d="M45,780 C55,775 58,762 48,758 C38,762 41,775 45,780 Z" fill={vine} />
+        <path d="M78,828 C86,820 82,808 73,811 C66,818 70,826 78,828 Z" fill={vine} />
+      </g>
+
+      {/* Bloomed Roses */}
+      {r1Scale > 0 && (
+        <g transform={`translate(70, 130) scale(${r1Scale})`} opacity={r1Opacity}>
+          <RoseBud color={r1Color} />
+        </g>
+      )}
+      {r2Scale > 0 && (
+        <g transform={`translate(-10, 250) scale(${r2Scale})`} opacity={r2Opacity}>
+          <RoseBud color={r2Color} />
+        </g>
+      )}
+      {r3Scale > 0 && (
+        <g transform={`translate(85, 475) scale(${r3Scale})`} opacity={r3Opacity}>
+          <RoseBud color={r3Color} />
+        </g>
+      )}
+      {r4Scale > 0 && (
+        <g transform={`translate(0, 690) scale(${r4Scale})`} opacity={r4Opacity}>
+          <RoseBud color={r4Color} />
+        </g>
+      )}
     </svg>
   );
 }
 
-// ─── Rose Shape (drawn at origin 0,0; parent <g> handles placement) ──────────
-// Outer 6 petals + inner 6 petals + center disc + sepal
+interface RoseBudProps {
+  color: string;
+}
 
-function Rose({ color }: { color: string }) {
-  const outerAngles = [0, 60, 120, 180, 240, 300];
-  const innerAngles = [30, 90, 150, 210, 270, 330];
+function RoseBud({ color }: RoseBudProps) {
   return (
     <>
-      {/* Sepal — always green, behind petals */}
-      <path
-        d="M0 7 C-5 3 -6 -4 0 -2 C6 -4 5 3 0 7 Z"
-        fill="#3d6b42"
-        opacity={0.92}
-      />
-      {/* Outer petal ring */}
-      {outerAngles.map((angle) => (
+      <circle cx={0} cy={0} r={10} fill={color} opacity={0.35} />
+      {/* 5 layered petals */}
+      {[0, 72, 144, 216, 288].map((angle) => (
         <ellipse
-          key={`op${angle}`}
-          cx={0}
-          cy={-7}
-          rx={5.5}
-          ry={10}
-          fill={color}
-          opacity={0.52}
-          transform={`rotate(${angle})`}
-        />
-      ))}
-      {/* Inner petal ring */}
-      {innerAngles.map((angle) => (
-        <ellipse
-          key={`ip${angle}`}
+          key={angle}
           cx={0}
           cy={-5}
           rx={4}
@@ -254,9 +195,7 @@ function Rose({ color }: { color: string }) {
           transform={`rotate(${angle})`}
         />
       ))}
-      {/* Center disc */}
       <circle cx={0} cy={0} r={3.5} fill={color} opacity={0.95} />
-      {/* Highlight spot */}
       <circle cx={-1} cy={-1} r={1.6} fill="#fff8f2" opacity={0.38} />
     </>
   );
@@ -267,6 +206,11 @@ function Rose({ color }: { color: string }) {
 export default function ScrollRoseVines() {
   const [scroll, setScroll] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [fallingPetals, setFallingPetals] = useState<FallingPetal[]>([]);
+
+  const leftVineRef = useRef<HTMLDivElement>(null);
+  const rightVineRef = useRef<HTMLDivElement>(null);
+  const lastSpawnTimeRef = useRef(0);
 
   const onScroll = useCallback(() => {
     const top = window.scrollY;
@@ -285,6 +229,82 @@ export default function ScrollRoseVines() {
     };
   }, [onScroll]);
 
+  // ── Music-reactive loop (breathing and petal falls) ────────────────────────
+  useEffect(() => {
+    if (!mounted) return;
+
+    let animFrameId: number;
+
+    const tick = () => {
+      const audioData = (window as any).__ambientAudioData;
+      const isPlaying = audioData?.isPlaying;
+      const reducedMotion = audioData?.reducedMotion;
+      
+      const bass = audioData?.bass || 0;
+      const volume = audioData?.volume || 0;
+
+      // 1. Set breathing transform scale directly on vine DOM wrappers
+      const scale = isPlaying && !reducedMotion ? 1.0 + volume * 0.015 : 1.0;
+
+      if (leftVineRef.current) {
+        leftVineRef.current.style.transform = `scale(${scale})`;
+        leftVineRef.current.style.transformOrigin = "left center";
+      }
+      if (rightVineRef.current) {
+        rightVineRef.current.style.transform = `scaleX(-1) scale(${scale})`;
+        rightVineRef.current.style.transformOrigin = "right center";
+      }
+
+      // 2. Strong beats trigger detaching petals
+      if (isPlaying && !reducedMotion && bass > 0.82 && Date.now() - lastSpawnTimeRef.current > 4000) {
+        lastSpawnTimeRef.current = Date.now();
+
+        const side = Math.random() > 0.5 ? "left" : "right";
+        const yPositions = [150, 260, 480, 700]; // approximate rose y levels on viewport
+        const y = yPositions[Math.floor(Math.random() * yPositions.length)];
+        const startX = side === "left" ? 50 : window.innerWidth - 50;
+
+        const newPetal = {
+          id: Math.random(),
+          x: startX,
+          y,
+          size: Math.random() * 6 + 6, // 6px to 12px detaching petals
+          speedX: side === "left" ? Math.random() * 0.4 + 0.15 : -(Math.random() * 0.4 + 0.15),
+          speedY: Math.random() * 0.5 + 0.4,
+          swayTime: Math.random() * 100,
+          angle: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 1.5,
+          opacity: 0.95
+        };
+
+        setFallingPetals((prev) => [...prev, newPetal]);
+      }
+
+      // 3. Update active detaching falling petals coordinates
+      setFallingPetals((prev) => {
+        if (prev.length === 0) return prev;
+        return prev
+          .map((p) => {
+            const updated = {
+              ...p,
+              y: p.y + p.speedY,
+              x: p.x + p.speedX + Math.sin(p.swayTime) * 0.4,
+              swayTime: p.swayTime + 0.015,
+              angle: p.angle + p.rotSpeed,
+              opacity: p.y > window.innerHeight - 100 ? p.opacity - 0.025 : p.opacity
+            };
+            return updated;
+          })
+          .filter((p) => p.y < window.innerHeight && p.opacity > 0);
+      });
+
+      animFrameId = requestAnimationFrame(tick);
+    };
+
+    animFrameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animFrameId);
+  }, [mounted]);
+
   if (!mounted) return null;
 
   const svgWrapStyle: React.CSSProperties = {
@@ -297,19 +317,41 @@ export default function ScrollRoseVines() {
     zIndex: 4,
     opacity: 0.80,
     overflow: "visible",
+    transition: "transform 0.1s ease-out"
   };
 
   return (
     <>
       {/* Left vine */}
-      <div style={{ ...svgWrapStyle, left: 0 }}>
+      <div ref={leftVineRef} style={{ ...svgWrapStyle, left: 0 }}>
         <VineSvg scroll={scroll} />
       </div>
 
       {/* Right vine — mirror of left */}
-      <div style={{ ...svgWrapStyle, right: 0, transform: "scaleX(-1)" }}>
+      <div ref={rightVineRef} style={{ ...svgWrapStyle, right: 0 }}>
         <VineSvg scroll={scroll} />
       </div>
+
+      {/* Dynamic Detaching Falling Petals overlay */}
+      {fallingPetals.map((p) => (
+        <div
+          key={p.id}
+          className="fixed pointer-events-none select-none z-50"
+          style={{
+            left: `${p.x}px`,
+            top: `${p.y}px`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            opacity: p.opacity,
+            transform: `rotate(${p.angle}deg)`,
+            transition: "none",
+          }}
+        >
+          <svg viewBox="0 0 20 20" className="w-full h-full text-[#8b2252]">
+            <path d="M10,0 C5,5 0,10 5,15 C10,20 15,20 15,15 C15,10 15,5 10,0 Z" fill="currentColor" />
+          </svg>
+        </div>
+      ))}
     </>
   );
 }

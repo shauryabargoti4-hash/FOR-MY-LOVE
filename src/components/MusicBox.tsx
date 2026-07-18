@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import myCustomSong from "@/assets/igorlisul-the-old-good-path-relaxing-guitar-music-563065.mp3";
+import { initAudioAnalyzer, startAnalyzerLoop, stopAnalyzerLoop } from "@/lib/audio-analyzer";
 
 interface NoteParticle {
   id: number;
@@ -26,9 +27,11 @@ export default function MusicBox() {
     if (savedState === "playing") {
       const resumePlayback = () => {
         if (audioRef.current) {
+          initAudioAnalyzer(audioRef.current);
           audioRef.current.play()
             .then(() => {
               setIsPlaying(true);
+              startAnalyzerLoop();
               cleanupEvents();
             })
             .catch((err) => {
@@ -82,11 +85,14 @@ export default function MusicBox() {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      stopAnalyzerLoop();
       sessionStorage.setItem("musicBoxPlayState", "paused");
     } else {
+      initAudioAnalyzer(audioRef.current);
       audioRef.current.play()
         .then(() => {
           setIsPlaying(true);
+          startAnalyzerLoop();
           sessionStorage.setItem("musicBoxPlayState", "playing");
         })
         .catch((err) => {

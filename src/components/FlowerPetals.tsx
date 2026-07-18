@@ -113,16 +113,29 @@ export default function FlowerPetals() {
         maxAllowedY = footerRect.top - 40;
       }
 
+      const audioData = (window as any).__ambientAudioData;
+      const isPlaying = audioData?.isPlaying;
+      const reducedMotion = audioData?.reducedMotion;
+      
+      const bass = audioData?.bass || 0;
+      const mid = audioData?.mid || 0;
+      const volume = audioData?.volume || 0;
+
       petals.forEach((p) => {
         // 1. Horizontal sway (sine wave oscillation)
-        p.swayTime += p.swaySpeed;
-        p.x += Math.sin(p.swayTime) * p.swayAmplitude;
+        const currentSwaySpeed = isPlaying && !reducedMotion ? p.swaySpeed * (1.0 + mid * 0.4) : p.swaySpeed;
+        p.swayTime += currentSwaySpeed;
+
+        const currentSwayAmp = isPlaying && !reducedMotion ? p.swayAmplitude * (1.0 + bass * 0.3) : p.swayAmplitude;
+        p.x += Math.sin(p.swayTime) * currentSwayAmp;
 
         // 2. Slow downward fall
-        p.y += p.speedY;
+        const currentSpeedY = isPlaying && !reducedMotion ? p.speedY * (1.0 + bass * 0.25) : p.speedY;
+        p.y += currentSpeedY;
 
         // 3. Axis rotation
-        p.angle += p.rotSpeed;
+        const currentRotSpeed = isPlaying && !reducedMotion ? p.rotSpeed * (1.0 + volume * 0.35) : p.rotSpeed;
+        p.angle += currentRotSpeed;
 
         // 4. Subtle mouse push force
         const dx = p.x - mouse.x;
