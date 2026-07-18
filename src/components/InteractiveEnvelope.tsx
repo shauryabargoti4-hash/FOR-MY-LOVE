@@ -17,15 +17,20 @@ export default function InteractiveEnvelope({ recipient, sender, content }: Inte
 
   return (
     <div 
-      className={`relative w-full max-w-[480px] aspect-[3/2] mx-auto transition-all duration-[1000ms] ease-in-out ${
+      className={`relative w-full max-w-[480px] aspect-[3/2] mx-auto ${
         isOpen ? "mt-48 mb-24 scale-[1.03]" : "mt-8 mb-8 hover:scale-[1.01]"
       }`}
+      style={{ transition: "all var(--duration-slow) var(--ease-regency-slow)" }}
     >
       {/* 3D Envelope Wrapper */}
       <div 
-        className={`relative w-full h-full bg-[#ebdcb9] rounded-b-xl shadow-xl border border-[#d8c7a2] transition-shadow duration-700 cursor-pointer ${
+        className={`relative w-full h-full bg-[#ebdcb9] rounded-b-xl border border-[#d8c7a2] cursor-pointer ${
           isOpen ? "shadow-2xl" : "shadow-md hover:shadow-lg"
         }`}
+        style={{ 
+          transition: "box-shadow var(--duration-medium) var(--ease-regency)",
+          transitionDelay: "0s"
+        }}
         onClick={handleOpen}
       >
         
@@ -34,12 +39,15 @@ export default function InteractiveEnvelope({ recipient, sender, content }: Inte
 
         {/* 2. Letter Sheet (Slides upward out of the envelope and elevates to z-index: 30) */}
         <div 
-          className={`absolute left-[4%] right-[4%] bg-[#fefdfa] p-6 sm:p-10 border border-gold/10 shadow-lg rounded-md transition-all duration-[1200ms] cubic-bezier(0.25, 1, 0.5, 1) ${
+          className={`absolute left-[4%] right-[4%] bg-[#fefdfa] p-6 sm:p-10 border border-gold/10 shadow-lg rounded-md ${
             isOpen 
               ? "-translate-y-[62%] z-20 h-auto opacity-100 scale-100 max-h-[460px] overflow-y-auto" 
               : "top-[8%] bottom-[4%] z-10 opacity-60 scale-[0.96]"
           }`}
-          style={{ transformOrigin: "bottom center" }}
+          style={{ 
+            transformOrigin: "bottom center",
+            transition: "all var(--duration-slow) var(--ease-regency-slow)"
+          }}
         >
           {/* Embossed laid paper texture overlay */}
           <div className="absolute inset-0 bg-laid-paper opacity-[0.06] pointer-events-none" />
@@ -97,22 +105,24 @@ export default function InteractiveEnvelope({ recipient, sender, content }: Inte
 
         {/* 4. Top Folding Flap (Rotates on horizontal X-axis upward when opened) */}
         <div 
-          className="absolute top-0 left-0 right-0 h-1/2 bg-[#dfd0ad] transition-all duration-[800ms] ease-in-out border-t border-[#d1c2a0]" 
+          className="absolute top-0 left-0 right-0 h-1/2 bg-[#dfd0ad] border-t border-[#d1c2a0]" 
           style={{ 
             clipPath: "polygon(0% 0%, 50% 100%, 100% 0%)",
             transformOrigin: "top center",
             transform: isOpen ? "rotateX(180deg) translateY(2px)" : "rotateX(0deg)",
-            zIndex: isOpen ? 5 : 25
+            zIndex: isOpen ? 5 : 25,
+            transition: "transform var(--duration-slow) var(--ease-regency-slow), z-index 0s"
           }} 
         />
 
         {/* 5. Wax Seal (Sits on the tip of the top flap. Splits/Cracks when opened) */}
         <div 
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-[850ms] ease-in-out"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{ 
             zIndex: isOpen ? 10 : 30,
             transform: isOpen ? "translate(-50%, -125px) scale(0.9)" : "translate(-50%, -50%) scale(1)",
-            opacity: isOpen ? 0.4 : 1
+            opacity: isOpen ? 0.4 : 1,
+            transition: "all var(--duration-slow) var(--ease-regency-slow)"
           }}
         >
           <svg 
@@ -123,16 +133,16 @@ export default function InteractiveEnvelope({ recipient, sender, content }: Inte
           >
             <defs>
               <filter id="seal-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.3" />
+                <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.3" />
               </filter>
             </defs>
 
             {/* Left Half of Wax Seal (Separates and rotates left) */}
             <g 
-              className="transition-transform duration-[850ms] ease-out" 
               style={{ 
                 transform: isOpen ? "translateX(-6px) rotate(-10deg)" : "translateX(0px) rotate(0deg)",
-                transformOrigin: "24px 24px"
+                transformOrigin: "24px 24px",
+                transition: "transform var(--duration-slow) var(--ease-regency-slow)"
               }}
             >
               {/* Irregular Left Half wax shape */}
@@ -149,10 +159,10 @@ export default function InteractiveEnvelope({ recipient, sender, content }: Inte
 
             {/* Right Half of Wax Seal (Separates and rotates right) */}
             <g 
-              className="transition-transform duration-[850ms] ease-out" 
               style={{ 
                 transform: isOpen ? "translateX(6px) rotate(10deg)" : "translateX(0px) rotate(0deg)",
-                transformOrigin: "24px 24px"
+                transformOrigin: "24px 24px",
+                transition: "transform var(--duration-slow) var(--ease-regency-slow)"
               }}
             >
               {/* Irregular Right Half wax shape */}

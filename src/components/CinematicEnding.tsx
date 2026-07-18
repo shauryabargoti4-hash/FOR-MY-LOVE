@@ -459,7 +459,7 @@ export default function CinematicEnding({ herName, yourName }: CinematicEndingPr
           width: "220px",
           height: "220px",
           perspective: "900px",
-          animation: sealVisible ? "seal-rise 1.2s cubic-bezier(0.34,1.56,0.64,1) 0s both" : "none",
+          animation: sealVisible ? "seal-rise var(--duration-slow) var(--ease-regency-elastic) 0s both" : "none",
           opacity: sealVisible ? 1 : 0,
         }}
       >
@@ -472,7 +472,7 @@ export default function CinematicEnding({ herName, yourName }: CinematicEndingPr
             transformStyle: "preserve-3d",
             transform: `rotateY(${flipAngle}deg)`,
             transition: flipping && !flipped
-              ? "transform 2.8s cubic-bezier(0.4,0,0.2,1)"
+              ? "transform 2.8s var(--ease-regency-slow)"
               : "none",
             ...oscillateStyle,
           }}

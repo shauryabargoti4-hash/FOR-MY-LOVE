@@ -216,13 +216,14 @@ export default function AntiquePocketWatch() {
 
           {/* 3D POCKET WATCH LID (Swing cover) */}
           <div 
-            className="absolute inset-0 rounded-full select-none transform-style-3d origin-left transition-transform duration-[1400ms] ease-in-out shadow-2xl flex items-center justify-center"
+            className="absolute inset-0 rounded-full select-none transform-style-3d origin-left shadow-2xl flex items-center justify-center"
             style={{
               transform: isOpen ? "rotateY(-135deg) translateZ(2px)" : "rotateY(0deg)",
               boxShadow: isOpen 
                 ? "inset 0 0 20px rgba(0,0,0,0.5), -10px 10px 30px rgba(0,0,0,0.2)" 
                 : "none",
-              backgroundColor: "#2e1c0c"
+              backgroundColor: "#2e1c0c",
+              transition: "transform var(--duration-slow) var(--ease-regency-slow)"
             }}
           >
             {/* Outer Lid Cover (Polished Engraved Gold) */}

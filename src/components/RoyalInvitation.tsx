@@ -58,10 +58,14 @@ export default function RoyalInvitation() {
 
           {/* OVERLAY: Left Door / Panel */}
           <div 
-            className={`absolute top-0 bottom-0 left-0 w-1/2 bg-[#efe6d8] border-y border-l border-[#b68a35]/35 shadow-md origin-left transition-transform duration-[1200ms] ease-out transform transform-style-3d z-20 rounded-l-sm ${
+            className={`absolute top-0 bottom-0 left-0 w-1/2 bg-[#efe6d8] border-y border-l border-[#b68a35]/35 shadow-md origin-left transform transform-style-3d z-20 rounded-l-sm ${
               isOpen ? "-rotate-y-180 pointer-events-none" : "rotate-y-0"
             }`}
-            style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+            style={{ 
+              transition: "transform var(--duration-slow) var(--ease-regency-slow)",
+              backfaceVisibility: "hidden", 
+              WebkitBackfaceVisibility: "hidden" 
+            }}
           >
             {/* Front outer design of left panel */}
             <div className="absolute inset-0 p-6 flex flex-col justify-between border-r border-dashed border-[#b68a35]/25 bg-laid-paper rounded-l-sm">
@@ -80,10 +84,14 @@ export default function RoyalInvitation() {
 
           {/* OVERLAY: Right Door / Panel */}
           <div 
-            className={`absolute top-0 bottom-0 right-0 w-1/2 bg-[#efe6d8] border-y border-r border-[#b68a35]/35 shadow-md origin-right transition-transform duration-[1200ms] ease-out transform transform-style-3d z-20 rounded-r-sm ${
+            className={`absolute top-0 bottom-0 right-0 w-1/2 bg-[#efe6d8] border-y border-r border-[#b68a35]/35 shadow-md origin-right transform transform-style-3d z-20 rounded-r-sm ${
               isOpen ? "rotate-y-180 pointer-events-none" : "rotate-y-0"
             }`}
-            style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+            style={{ 
+              transition: "transform var(--duration-slow) var(--ease-regency-slow)",
+              backfaceVisibility: "hidden", 
+              WebkitBackfaceVisibility: "hidden" 
+            }}
           >
             {/* Front outer design of right panel */}
             <div className="absolute inset-0 p-6 flex flex-col justify-between border-l border-dashed border-[#b68a35]/25 bg-laid-paper rounded-r-sm">
@@ -102,9 +110,10 @@ export default function RoyalInvitation() {
 
           {/* OVERLAY: Ribbon Band & Wax Seal (Fades and cracks on open) */}
           <div 
-            className={`absolute inset-0 flex items-center justify-center pointer-events-none z-30 transition-all duration-[1000ms] ${
+            className={`absolute inset-0 flex items-center justify-center pointer-events-none z-30 ${
               isOpen ? "opacity-0 scale-105 pointer-events-none" : "opacity-100"
             }`}
+            style={{ transition: "all var(--duration-slow) var(--ease-regency-slow)" }}
           >
             {/* Vertical Ribbon strip */}
             <div className="absolute top-0 bottom-0 w-8 bg-[#5e2a35] shadow-[0_0_12px_rgba(0,0,0,0.15)] flex items-center justify-center">
@@ -123,7 +132,8 @@ export default function RoyalInvitation() {
             {/* Clickable Large Red Wax Seal Stamp */}
             <button
               onClick={() => setIsOpen(true)}
-              className="absolute w-20 h-20 rounded-full cursor-pointer select-auto pointer-events-auto transform transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg active:shadow-md"
+              className="absolute w-20 h-20 rounded-full cursor-pointer select-auto pointer-events-auto transform hover:scale-110 active:scale-95 shadow-lg active:shadow-md"
+              style={{ transition: "transform var(--duration-fast) var(--ease-regency-elastic), box-shadow var(--duration-fast) var(--ease-regency)" }}
               title="Unseal Royal Invitation"
             >
               <svg 
